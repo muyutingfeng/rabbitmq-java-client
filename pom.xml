@@ -682,7 +682,6 @@
   </profiles>
 
   <dependencies>
-    <!--追加引入-->
     <dependency>
       <groupId>com.rabbitmq</groupId>
       <artifactId>amqp-client</artifactId>
