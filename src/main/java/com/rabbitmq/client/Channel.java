@@ -401,11 +401,15 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @see com.rabbitmq.client.AMQP.Exchange.DeclareOk
      * @param exchange the name of the exchange
      * @param type the exchange type
+     *        ##常见：fanout、direct、topic
      * @param durable true if we are declaring a durable exchange (the exchange will survive a server restart)
+     *        ##设置是否持久化，持久化可以将交换器存储，在服务器重启的时候不会丢失相关信息
      * @param autoDelete true if the server should delete the exchange when it is no longer in use
-     * @param internal true if the exchange is internal, i.e. can't be directly
-     * published to by a client.
+     *        ##设置为true则可自动删除，自动删除的前提是至少有一个交换器与这个交换器绑定，之后所有与此交换器绑定的队列或者交换器都与其解绑
+     * @param internal true if the exchange is internal, i.e. can't be directly published to by a client.
+     *        ##设置是否为内置交换器，客户端程序无法直接发送消息到这个交换器中，只能通过交换器路由到交换器这种方式
      * @param arguments other properties (construction arguments) for the exchange
+     *
      * @return a declaration-confirm method to indicate the exchange was successfully declared
      * @throws java.io.IOException if an error is encountered
      */
@@ -429,6 +433,9 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * published to by a client.
      * @param arguments other properties (construction arguments) for the exchange
      * @throws java.io.IOException if an error is encountered
+     *
+     * ##比exchangeDeclare多NoWait参数，指Exchange.Declare命令参数，意思是不需要服务器返回(该方法为void，exchangeDeclare为Exchange.DeclareOk)
+     * ##声明完成实际未创建成功，立即使用则会发生异常，无特殊场景，不建议使用
      */
     void exchangeDeclareNoWait(String exchange,
                                String type,
@@ -462,6 +469,7 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * Declare an exchange passively; that is, check if the named exchange exists.
      * @param name check the existence of an exchange named this
      * @throws IOException the server will raise a 404 channel exception if the named exchange does not exist.
+     * ##检测相应的交换器是否存在，如果存在则正常返回，如果不存在则抛出异常：404 channel exception
      */
     Exchange.DeclareOk exchangeDeclarePassive(String name) throws IOException;
 
@@ -473,6 +481,7 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @param ifUnused true to indicate that the exchange is only to be deleted if it is unused
      * @return a deletion-confirm method to indicate the exchange was successfully deleted
      * @throws java.io.IOException if an error is encountered
+     * ##设置是否在交换器没有被使用的情况下删除，如果为false则无论如何都会被删除
      */
     Exchange.DeleteOk exchangeDelete(String exchange, boolean ifUnused) throws IOException;
 
@@ -577,6 +586,7 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @see com.rabbitmq.client.AMQP.Queue.DeclareOk
      * @return a declaration-confirm method to indicate the queue was successfully declared
      * @throws java.io.IOException if an error is encountered
+     * ##默认创建一个由RabbitMQ命名的类似amq.gen-******的匿名队列。排他的、自动删除的、非持久化的队列
      */
     Queue.DeclareOk queueDeclare() throws IOException;
 
@@ -586,8 +596,11 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @see com.rabbitmq.client.AMQP.Queue.DeclareOk
      * @param queue the name of the queue
      * @param durable true if we are declaring a durable queue (the queue will survive a server restart)
+     *        ##是否持久化，持久化则会存盘，在服务器重启的时候不会丢失相关信息
      * @param exclusive true if we are declaring an exclusive queue (restricted to this connection)
+     *        ##设置是否排他，排他队列基于Connection可见，同一连接的不同channel可以同时访问同一连接创建的排他队列
      * @param autoDelete true if we are declaring an autodelete queue (server will delete it when no longer in use)
+     *
      * @param arguments other properties (construction arguments) for the queue
      * @return a declaration-confirm method to indicate the queue was successfully declared
      * @throws java.io.IOException if an error is encountered
