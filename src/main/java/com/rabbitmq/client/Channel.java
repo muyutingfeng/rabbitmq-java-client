@@ -266,7 +266,9 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @param exchange the exchange to publish the message to
      * @param routingKey the routing key
      * @param mandatory true if the 'mandatory' flag is to be set
+     *
      * @param props other properties for the message - routing headers etc
+     *
      * @param body the message body
      * @throws java.io.IOException if an error is encountered
      */
@@ -287,7 +289,10 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @param exchange the exchange to publish the message to
      * @param routingKey the routing key
      * @param mandatory true if the 'mandatory' flag is to be set
+     *        ##当mandatory参数设置为true时，交换器无法根据自身的类型和路由键找到一个符合条件的队列，那么mq会调用Basic.Return命令将消息返回给生产者
+     *        ##当设置为false出现上述情形，则消息直接被丢弃
      * @param immediate true if the 'immediate' flag is to be
+     *        ##
      * set. Note that the RabbitMQ server does not support this flag.
      * @param props other properties for the message - routing headers etc
      * @param body the message body
@@ -652,6 +657,7 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @param queue the name of the queue
      * @param ifUnused true if the queue should be deleted only if not in use
      * @param ifEmpty true if the queue should be deleted only if empty
+     *        ##表示所在队列为空，队列里没有任何消息堆积的情况下才能被删除
      * @return a deletion-confirm method to indicate the queue was successfully deleted
      * @throws java.io.IOException if an error is encountered
      */
@@ -676,6 +682,7 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @param queue the name of the queue
      * @param exchange the name of the exchange
      * @param routingKey the routing key to use for the binding
+     *        ##用来绑定队列和交换器的路由键
      * @return a binding-confirm method if the binding was successfully created
      * @throws java.io.IOException if an error is encountered
      */
@@ -733,6 +740,7 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
 
     /**
      * Purges the contents of the given queue.
+     * ##清空队列的内容而不删除队列本身
      * @see com.rabbitmq.client.AMQP.Queue.Purge
      * @see com.rabbitmq.client.AMQP.Queue.PurgeOk
      * @param queue the name of the queue
@@ -743,6 +751,7 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
 
     /**
      * Retrieve a message from a queue using {@link com.rabbitmq.client.AMQP.Basic.Get}
+     * ##单条的获取消息
      * @see com.rabbitmq.client.AMQP.Basic.Get
      * @see com.rabbitmq.client.AMQP.Basic.GetOk
      * @see com.rabbitmq.client.AMQP.Basic.GetEmpty
@@ -750,6 +759,7 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @param autoAck true if the server should consider messages
      * acknowledged once delivered; false if the server should expect
      * explicit acknowledgements
+     *      ##false则需要调用channel.basicAck来确认消息已被成功接收
      * @return a {@link GetResponse} containing the retrieved message data
      * @throws java.io.IOException if an error is encountered
      */
@@ -779,6 +789,7 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @param multiple true to reject all messages up to and including
      * the supplied delivery tag; false to reject just the supplied
      * delivery tag.
+     *        ##设置为true则表示拒绝deliveryTag编号之前所有未被当前消费者确认的消息
      * @param requeue true if the rejected message(s) should be requeued rather
      * than discarded/dead-lettered
      * @throws java.io.IOException if an error is encountered
@@ -790,9 +801,14 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * Reject a message. Supply the deliveryTag from the {@link com.rabbitmq.client.AMQP.Basic.GetOk}
      * or {@link com.rabbitmq.client.AMQP.Basic.Deliver} method
      * containing the received message being rejected.
+     *
+     * ##一次性只能拒绝一条，批量拒绝使用basic.Nack
      * @see com.rabbitmq.client.AMQP.Basic.Reject
      * @param deliveryTag the tag from the received {@link com.rabbitmq.client.AMQP.Basic.GetOk} or {@link com.rabbitmq.client.AMQP.Basic.Deliver}
+     *        ##消息的编号，64位的长整型值
      * @param requeue true if the rejected message should be requeued rather than discarded/dead-lettered
+     *        ##如果requeue为true，则mq会重新将这条消息存入队列，以便将消息发送给下一个订阅的消费者
+     *        ##如果设置为false，则mq会立即把消息从队列中移出，而不会把他发送给新的消费者
      * @throws java.io.IOException if an error is encountered
      */
     void basicReject(long deliveryTag, boolean requeue) throws IOException;
@@ -1214,9 +1230,12 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @param autoAck true if the server should consider messages
      * acknowledged once delivered; false if the server should expect
      * explicit acknowledgements
+     *        ##设置是否自动确认
      * @param consumerTag a client-generated consumer tag to establish context
+     *        ##消费者标签，用来区分多个消费者
      * @param noLocal True if the server should not deliver to this consumer
      * messages published on this channel's connection. Note that the RabbitMQ server does not support this flag.
+     *        ##设置为true表示不能将同一个Connection中生产者发送的消息传递给这个Connection中的消费者
      * @param exclusive true if this is an exclusive consumer
      * @param arguments a set of arguments for the consume
      * @param deliverCallback callback when a message is delivered
@@ -1259,6 +1278,9 @@ public interface Channel extends ShutdownNotifier, AutoCloseable {
      * @param requeue If true, messages will be requeued and possibly
      * delivered to a different consumer. If false, messages will be
      * redelivered to the same consumer.
+     *
+     * ##设置为true则未被确认的消息会被重新加入到队列中，对于同一条消息可能被分配给不同的消费者
+     * ##如果为false则同一条消息会被分配给与之前相同的消费者
      */
     Basic.RecoverOk basicRecover(boolean requeue) throws IOException;
 

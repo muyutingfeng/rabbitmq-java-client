@@ -19,9 +19,27 @@
 
 核心class和interface
 Channel
+    |-exchangeDeclare
+    |-exchangeBind
+    |
+    |-queueDeclare
+    |-queueBind
+    |-queueUnbind
+
+
+
 Connection
 ConnectionFactory
+
 Consumer
+    |消费消息(推模式)
+    |-com.rabbitmq.client.Consumer
+    |-com.rabbitmq.client.DefaultConsumer
+    |消费消息(拉模式)
+    |-com.rabbitmq.client.Channel.basicGet(拉取消息)
+    |-com.rabbitmq.client.Channel.basicReject(拒绝消息)
+    |-com.rabbitmq.client.Channel.basicRecover(请求重新发送还未被确认的消息)
+
 
 
 
