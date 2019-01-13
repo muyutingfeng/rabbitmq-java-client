@@ -881,7 +881,6 @@ public class ConnectionFactory implements Cloneable {
      * @return an interface to the connection
      * @throws IOException if it encounters a problem
      */
-    //创建连接
     public Connection newConnection(Address[] addrs) throws IOException, TimeoutException {
         return newConnection(this.sharedExecutor, Arrays.asList(addrs), null);
     }
